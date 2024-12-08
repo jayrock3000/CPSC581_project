@@ -8,3 +8,9 @@
 #   https://pyswip.readthedocs.io/en/stable/get_started.html
 #   Run the following commands in console/terminal
 #   pip install -U pyswip
+
+# The above may require additional installs including
+#   Python
+#        https://www.python.org/downloads/
+#   pip Install Packages (PIP)
+#        https://packaging.python.org/en/latest/tutorials/installing-packages/

@@ -21,3 +21,21 @@ print(result)
 # Section for querying prolog
 for result in prolog.query("father(michael, X)"):
     print(result)
+
+
+def main():
+    print("Program begins")
+    finalResources = {}         # Dictionary to tabulate all resources needed
+    finalProcedure = []         # List to document steps for player to follow
+
+    finalResources.update({"redstone": 3, "stone": 16})
+    finalProcedure.insert(0, "Get money")
+    finalProcedure.insert(0, "Fuck bitches")
+
+    print(finalResources)
+    print(finalProcedure)
+
+    print("Program ended successfully")
+
+if __name__ == "__main__":
+    main()
