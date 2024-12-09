@@ -4,66 +4,9 @@ from pyswip import Prolog
 # Global Variables
 PROLOG = Prolog()
 DEBUG = False
-VALID_MACHINES = ["stone", "plank", "stick", "redstoneTorch", "comparator"]
+VALID_MACHINES = ["stone", "plank", "stick", "redstonetorch", "comparator"]
 QUIT_WORDS = ["", "exit", "close", "quit"]
-
-
-def prologInitialize():
-    if DEBUG:
-        print("function prologInitialize() begins")
-
-    # Initial facts for the Knowledge Base (KB)
-    PROLOG.assertz("raw(redstone)")
-    PROLOG.assertz("raw(log)")
-    PROLOG.assertz("raw(quartz)")
-    PROLOG.assertz("raw(cobblestone)")
-    PROLOG.assertz("raw(stick)")
-    PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
-    PROLOG.assertz("composedOf(stone, cobblestone, 1)")
-    PROLOG.assertz("composedOf(redstoneTorch, redstone, 1)")
-    PROLOG.assertz("composedOf(redstoneTorch, stick, 1)")
-    PROLOG.assertz("composedOf(comparator, redstoneTorch, 3)")
-    PROLOG.assertz("composedOf(comparator, quartz, 1)")
-    PROLOG.assertz("composedOf(comparator, stone, 3)")
-    PROLOG.assertz("composedOf(stick, plank, 0.5)")
-    PROLOG.assertz("composedOf(plank, log, 0.25)")
-    PROLOG.assertz("rawComposition(Item, Component, Qty) :- composedOf(Item, Component, Qty), raw(Component)")
-    PROLOG.assertz("rawComposition(Item, Subcomponent, TotalQty) :- composedOf(Item, Component, Qty), notRaw(Item), rawComposition(Component, Subcomponent, SubQty), TotalQty is Qty * SubQty")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
-
-
-    
-def prologQuery(finalResources):
-    if DEBUG:
-        print("function prologQuery() begins")
-
-    # Create query for KB
-    query = "rawComposition(comparator, X, Y)"
-
-    # Search KB
-    for result in PROLOG.query(query):
-        # Store value in finalResources
-
-        # If the key isn't initialized
-        if result["X"] not in finalResources:
-            finalResources[result["X"]] = result["Y"]
-        
-        # If the key is already initialized
-        else:
-            finalResources[result["X"]] = result["Y"] + finalResources[result["X"]]
-
-    # Backup of different methods to query prolog
-    #result = list(PROLOG.query(query))
-    #print(result)
-    #print("result type is:")
-    #print(type(result))
-
-
+MAX_STRING_LENGTH = 99
 
 
 ##########
@@ -108,11 +51,13 @@ def stringInput(prompt, minLength, maxLength):
         except:
             print("Sorry, it looks like that wasn't a valid entry. Please try again.\n")
             continue
+        '''
         if userInput == "":
             print("Entry cannot be blank\n")
             continue
+        '''
 
-        elif len(userInput) < minLength:
+        if len(userInput) < minLength:
             print("Sorry, minimum number of characters is " + str(minLength) + "\n")
             continue
 
@@ -122,9 +67,108 @@ def stringInput(prompt, minLength, maxLength):
         break
     return userInput
 
+
+##########
+# PROLOG
+##########
+
+
 ##############################
 # WIP
 ##############################
+def prologInitialize():
+    if DEBUG:
+        print("function prologInitialize() begins")
+
+    # Initial facts for the Knowledge Base (KB)
+    PROLOG.assertz("raw(redstone)")
+    PROLOG.assertz("raw(log)")
+    PROLOG.assertz("raw(quartz)")
+    PROLOG.assertz("raw(cobblestone)")
+    PROLOG.assertz("raw(stick)")
+    PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
+    PROLOG.assertz("composedOf(stone, cobblestone, 1)")
+    PROLOG.assertz("composedOf(redstonetorch, redstone, 1)")
+    PROLOG.assertz("composedOf(redstonetorch, stick, 1)")
+    PROLOG.assertz("composedOf(comparator, redstonetorch, 3)")
+    PROLOG.assertz("composedOf(comparator, quartz, 1)")
+    PROLOG.assertz("composedOf(comparator, stone, 3)")
+    PROLOG.assertz("composedOf(stick, plank, 0.5)")
+    PROLOG.assertz("composedOf(plank, log, 0.25)")
+    PROLOG.assertz("rawComposition(Item, Component, Qty) :- composedOf(Item, Component, Qty), raw(Component)")  # Returns raw components of an item
+    PROLOG.assertz("rawComposition(Item, Subcomponent, TotalQty) :- composedOf(Item, Component, Qty), notRaw(Item), rawComposition(Component, Subcomponent, SubQty), TotalQty is Qty * SubQty") # Recursively calls subcomponents until a raw item is found
+
+############TO DO##########
+############TO DO##########
+############TO DO##########
+
+    # mats
+    PROLOG.assertz("raw(string)")
+    PROLOG.assertz("composedOf(plankslab, plank, 0.5)")
+    PROLOG.assertz("composedOf(composter, plankslab, 7)")
+
+    # witch farm mats
+    PROLOG.assertz("composedOf(witchfarm, composter, 10)")
+    PROLOG.assertz("composedOf(witchfarm, string, 50)")
+
+    # witch farm drops
+    PROLOG.assertz("produces(witchfarm, redstone, 250)")
+    PROLOG.assertz("produces(witchfarm, sticks, 250)")
+
+    # witch farm effort
+    PROLOG.assertz("effort(witchfarm, low)")
+    #PROLOG.assertz("")
+    #PROLOG.assertz("")
+    #PROLOG.assertz("")
+
+    #Witch Farm
+    #
+    # Resources it produces
+    #   PRODUCES:   Redstone    250     per hour
+    #   PRODUCES:   Sticks      250     per hour
+    #   PRODUCES:   etc         ...     ...
+    #
+    # Resources to build it:
+    #   RESOURCES:  Composters  10
+    #   RESOURCES:  String      50
+    #   RESOURCES:  etc         ...
+    #           
+    # Effort to build it:
+    #   EFFORT:     low
+
+############TO DO##########
+############TO DO##########
+############TO DO##########
+
+
+
+
+    
+def prologQuery(resources, userQuery):
+    if DEBUG:
+        print("function prologQuery() begins")
+
+    # Build query for KB
+    query = "rawComposition(" + userQuery + ", X, Y)"
+
+    # Search KB
+    for result in PROLOG.query(query):
+        # Store value in finalResources
+
+        # If the key isn't initialized
+        if result["X"] not in resources:
+            resources[result["X"]] = result["Y"]
+        
+        # If the key is already initialized
+        else:
+            resources[result["X"]] = result["Y"] + resources[result["X"]]
+
+    # Backup of different methods to query prolog
+    #result = list(PROLOG.query(query))
+    #print(result)
+    #print("result type is:")
+    #print(type(result))
+
 
 ##############################
 # USER QUERY
@@ -150,12 +194,29 @@ def getUserQuery():
     '''
 
     # Get User Query
+    userQueryInput = ""
+    validInput = False
+    prompt = "\nPlease enter a machine: "
+    while validInput == False:
+        # Get input from User
+        userQueryInput = stringInput(prompt, 0, MAX_STRING_LENGTH)
 
-            ##### WIP #####
+        # Convert userInput to lower case
+        userQueryInput = userQueryInput.lower()
+
+        # Check if user wants to return to main menu
+        if userQueryInput in QUIT_WORDS:
+            print("\nReturning to main menu\n")
+            return
+
+        # Check user input a valid machine
+        if userQueryInput in VALID_MACHINES:
+            validInput = True
+        else:
+            print("Input needs to be a valid machine, please try again, or type QUIT to return to main menu ")
 
     # Query KB
-    #prologQuery(finalResources)
-
+    prologQuery(finalResources, userQueryInput)
 
     # Build Procedure
 
@@ -167,10 +228,6 @@ def getUserQuery():
     print(finalResources)
     print("finalProcedure is:")
     print(finalProcedure)
-
-
-
-
 
 ##############################
 # MAIN MENU
@@ -212,7 +269,6 @@ def main():
             break
 
     print("\n\nThank you for using this program!\n\n")
-
 
 
 if __name__ == "__main__":
