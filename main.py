@@ -4,8 +4,8 @@ from pyswip import Prolog
 # Global Variables
 PROLOG = Prolog()
 DEBUG = False
-VALID_MACHINES = ["stone", "plank", "stick", "redstonetorch", "comparator"]
-QUIT_WORDS = ["", "exit", "close", "quit"]
+VALID_MACHINES = ["stone", "plank", "stick", "redstonetorch", "comparator", "witchfarm"]
+QUIT_WORDS = ["", "4", "exit", "close", "quit"]
 MAX_STRING_LENGTH = 99
 
 
@@ -81,12 +81,28 @@ def prologInitialize():
         print("function prologInitialize() begins")
 
     # Initial facts for the Knowledge Base (KB)
+
+    # Raw resources
     PROLOG.assertz("raw(redstone)")
     PROLOG.assertz("raw(log)")
     PROLOG.assertz("raw(quartz)")
     PROLOG.assertz("raw(cobblestone)")
     PROLOG.assertz("raw(stick)")
+    PROLOG.assertz("raw(string)")
+
     PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
+
+    
+    # Farm cutoffs for raw resources
+    PROLOG.assertz("farmCutoff(redstone, 200)")
+    PROLOG.assertz("farmCutoff(log, 400)")
+    PROLOG.assertz("farmCutoff(quartz, 200)")
+    PROLOG.assertz("farmCutoff(cobblestone, 1000)")
+    PROLOG.assertz("farmCutoff(stick, 200)")
+    PROLOG.assertz("farmCutoff(string, 64)")
+
+
+    # item composition
     PROLOG.assertz("composedOf(stone, cobblestone, 1)")
     PROLOG.assertz("composedOf(redstonetorch, redstone, 1)")
     PROLOG.assertz("composedOf(redstonetorch, stick, 1)")
@@ -98,20 +114,15 @@ def prologInitialize():
     PROLOG.assertz("rawComposition(Item, Component, Qty) :- composedOf(Item, Component, Qty), raw(Component)")  # Returns raw components of an item
     PROLOG.assertz("rawComposition(Item, Subcomponent, TotalQty) :- composedOf(Item, Component, Qty), notRaw(Item), rawComposition(Component, Subcomponent, SubQty), TotalQty is Qty * SubQty") # Recursively calls subcomponents until a raw item is found
 
-############TO DO##########
-############TO DO##########
-############TO DO##########
-
     # mats
-    PROLOG.assertz("raw(string)")
     PROLOG.assertz("composedOf(plankslab, plank, 0.5)")
     PROLOG.assertz("composedOf(composter, plankslab, 7)")
 
-    # witch farm mats
+    # Materials to create
     PROLOG.assertz("composedOf(witchfarm, composter, 10)")
     PROLOG.assertz("composedOf(witchfarm, string, 50)")
 
-    # witch farm drops
+    # Drops from farm
     PROLOG.assertz("produces(witchfarm, redstone, 250)")
     PROLOG.assertz("produces(witchfarm, sticks, 250)")
 
@@ -144,7 +155,7 @@ def prologInitialize():
 
 
     
-def prologQuery(resources, userQuery):
+def prologCompositionQuery(resources, userQuery):
     if DEBUG:
         print("function prologQuery() begins")
 
@@ -179,18 +190,20 @@ def getUserQuery():
         print("function getUserQuery() begins")
 
     # Variables to hold results
-    finalResources = {}         # Dictionary to tabulate all resources needed
-    finalProcedure = []         # List to document steps for player to follow
+    resourcesInProgress = {}    # Working list of all resources our algorithm must account for
+    resourcesToGather = {}      # Resources the player should gather manually
+    resourcesFinal = {}         # Dictionary to tabulate all resources needed
+    procedureFinal = []         # List to document steps for player to follow
     '''
     #farmCutoff = {}             # Amount of resources where a farm will be recommended (instead of gathering manually)
     #^ do this in prolog
 
     # Initialize any preexisting resources
-    #finalResources["redstone"] = 15
+    #resourcesFinal["redstone"] = 15
 
     # Initialize any preexisting procedures
-    #finalProcedure.insert(0, "Get money")
-    #finalProcedure.insert(0, "Fuck bitches")
+    #procedureFinal.insert(0, "Get money")
+    #procedureFinal.insert(0, "Fuck bitches")
     '''
 
     # Get User Query
@@ -216,18 +229,74 @@ def getUserQuery():
             print("Input needs to be a valid machine, please try again, or type QUIT to return to main menu ")
 
     # Query KB
-    prologQuery(finalResources, userQueryInput)
+    prologCompositionQuery(resourcesInProgress, userQueryInput)
 
-    # Build Procedure
+    resourcesFinal = resourcesInProgress
 
             ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
 
+    # Build Procedure               # need a resourcesInProgress variable to track in general, a list which gets reduced to zero over time, loop until it's empty
+    while len(resourcesInProgress) > 0:
+        for resource in resourcesInProgress:
+            ### Check min cutoffs
+            amt = resourcesInProgress[resource]
+            
+            # Get cutoff
+            cutoffQuery = "farmCutoff(" + resource + ", CutoffAmt)"
+
+            # Query prolog for the cutoff amount
+            for result in PROLOG.query(cutoffQuery):
+
+                # If the amount is small, have user gather it manually
+                if amt < result["CutoffAmt"]:
+                    resourcesToGather.update({resource: amt})
+                    print("Added {" + resource + "} to resourcesToGather")
+
+            ### Find all farms that produce X resource
+            farmsList = []
+
+    ######## LAST WORKING HERE ##########################
+    ######## LAST WORKING HERE ##########################
+    ######## LAST WORKING HERE ##########################
+
+            ### Evaluate which farm is best
+
+            ### Add building the farm to Procedure
+
+            ### Get resources needed to build the farm
+
+            ### Add those resources to resourcesInProgress (purge any that are in a list of farmed resources)
+
+        # Remove manually gathered resources from resourcesInProgress
+        for x in resourcesToGather:
+            del resourcesInProgress[x]
+            print("resourcesInProgress is now:")
+            print(resourcesInProgress)
+
+        # Remove this break statement once you can reliably clear the resourcesInProgress dictionary
+        break
+
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
+            ##### WIP #####
 
     # Display Results
-    print("\nfinalResources is:")
-    print(finalResources)
+    print("\nA list of needed resources has been saved to resourcesFinal:")
+    #print(resourcesFinal)
+    print("User should gather the following resources manually:")
+    print(resourcesToGather)
+    print("Suggested procedure to gather the remaining resources:")
     print("finalProcedure is:")
-    print(finalProcedure)
+    print(procedureFinal)
 
 ##############################
 # MAIN MENU
@@ -240,8 +309,9 @@ def displayMainMenu():
     print("________________")
     print("\nMain Menu\n")
     print("1. Search Knowledge Base")
-    print("2. WIP")
-    print("3. Exit\n")
+    print("2. List Valid Machines")
+    print("3. WIP")
+    print("4. Exit\n")
 
 
 # Main program loop
@@ -255,17 +325,21 @@ def main():
     # Main Menu
     userSelection = -1
     prompt = "Your selection: "
-    while userSelection != 3:
+    while userSelection != 4:
         displayMainMenu()
-        userSelection = intInput(prompt, 1, 3)
+        userSelection = intInput(prompt, 1, 4)
 
         if userSelection == 1:
             getUserQuery()
         
-        elif userSelection == 2:
-            print("\n\nThis section is a work in progress - more to come!\n\n")
+        if userSelection == 2:
+            print("\nValid Machines:")
+            print(VALID_MACHINES)
         
         elif userSelection == 3:
+            print("\n\nThis section is a work in progress - more to come!\n\n")
+        
+        elif userSelection == 4:
             break
 
     print("\n\nThank you for using this program!\n\n")
