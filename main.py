@@ -94,13 +94,20 @@ def prologInitialize():
 
     
     # Farm cutoffs for raw resources
+    '''
     PROLOG.assertz("farmCutoff(redstone, 200)")
     PROLOG.assertz("farmCutoff(log, 400)")
     PROLOG.assertz("farmCutoff(quartz, 200)")
     PROLOG.assertz("farmCutoff(cobblestone, 1000)")
     PROLOG.assertz("farmCutoff(stick, 200)")
     PROLOG.assertz("farmCutoff(string, 64)")
-
+    '''
+    PROLOG.assertz("farmCutoff(redstone, 1)")
+    PROLOG.assertz("farmCutoff(log, 1)")
+    PROLOG.assertz("farmCutoff(quartz, 1)")
+    PROLOG.assertz("farmCutoff(cobblestone, 1)")
+    PROLOG.assertz("farmCutoff(stick, 1)")
+    PROLOG.assertz("farmCutoff(string, 1)")
 
     # item composition
     PROLOG.assertz("composedOf(stone, cobblestone, 1)")
@@ -124,7 +131,8 @@ def prologInitialize():
 
     # Drops from farm
     PROLOG.assertz("produces(witchfarm, redstone, 250)")
-    PROLOG.assertz("produces(witchfarm, sticks, 250)")
+    PROLOG.assertz("produces(witchfarm, stick, 500)")
+    PROLOG.assertz("produces(villagers, redstone, 100)")
 
     # witch farm effort
     PROLOG.assertz("effort(witchfarm, low)")
@@ -243,11 +251,12 @@ def getUserQuery():
     # Build Procedure               # need a resourcesInProgress variable to track in general, a list which gets reduced to zero over time, loop until it's empty
     while len(resourcesInProgress) > 0:
         for resource in resourcesInProgress:
+            print(f"\nCurrently searching resource: ({resource})")
             ### Check min cutoffs
             amt = resourcesInProgress[resource]
             
             # Get cutoff
-            cutoffQuery = "farmCutoff(" + resource + ", CutoffAmt)"
+            cutoffQuery = f"farmCutoff({resource}, CutoffAmt)"
 
             # Query prolog for the cutoff amount
             for result in PROLOG.query(cutoffQuery):
@@ -255,16 +264,62 @@ def getUserQuery():
                 # If the amount is small, have user gather it manually
                 if amt < result["CutoffAmt"]:
                     resourcesToGather.update({resource: amt})
-                    print("Added {" + resource + "} to resourcesToGather")
+                    print(f"Added ({resource}) to resourcesToGather")
 
-            ### Find all farms that produce X resource
-            farmsList = []
+            # Find all farms that produce this resource
+            farmsList = {}
+            farmQuery = f"produces(Farmname, {resource}, Amt)"
+            farm = {}       # Variable to receive the result of the prolog query
+            for farm in PROLOG.query(farmQuery):
+                #print("Result of the query was:")
+                #print(farm)
+                farmsList.update({farm["Farmname"]:farm["Amt"]})
 
-    ######## LAST WORKING HERE ##########################
-    ######## LAST WORKING HERE ##########################
-    ######## LAST WORKING HERE ##########################
+            # Handle exceptions where no farms can be found
+            if len(farm) == 0:
+                print(f"No farms listed for the resource: ({resource})")
+                continue
+
+            else:
+                print(f"Found the following farms: {farmsList}")
+                #print(farmsList)
+
 
             ### Evaluate which farm is best
+            # Write down everything you EXPECT to put in here
+            # Go farm by farm - do them one at a time
+            suitabilityScore = {}
+            for thisFarm in farmsList:                  # Currently farmsList is a dictionary where the keys are the name of the farm, the value is the rate it produces our given resource
+                print(f"Analyzing farm: {thisFarm}")
+
+                # Score variable to track analysis
+                score = 0     
+
+                # Get other resources produced by the farm
+                allProduced = {}
+                allProducedQuery = f"produces({thisFarm}, Resource, Amt)"
+                for resultORQ in PROLOG.query(allProducedQuery):
+                    allProduced.update({resultORQ["Resource"]:resultORQ["Amt"]})
+
+                # Loop through otherResources
+                for x in allProduced:
+                    if x in resourcesInProgress:
+                        score += allProduced[x]     # Add to the score if resource is necessary
+                    else:
+                        score += allProduced[x] / 10   # Non-essential products of the farm still count, but less valuable
+
+                # Need to add/multiply a bunch of things together
+                # Start with the 
+
+                # Set suitability score for this farm
+                suitabilityScore.update({thisFarm : score})
+                print(f"Suitability score for {thisFarm} is {suitabilityScore[thisFarm]}")
+
+            # Compare and rank suitability scores                
+
+    ######## LAST WORKING HERE ##########################
+    ######## LAST WORKING HERE ##########################
+    ######## LAST WORKING HERE ##########################
 
             ### Add building the farm to Procedure
 
@@ -290,9 +345,9 @@ def getUserQuery():
             ##### WIP #####
 
     # Display Results
-    print("\nA list of needed resources has been saved to resourcesFinal:")
-    #print(resourcesFinal)
-    print("User should gather the following resources manually:")
+    print("\nThese are all the resources required:")
+    print(resourcesFinal)
+    print("\nUser should gather the following resources manually:")
     print(resourcesToGather)
     print("Suggested procedure to gather the remaining resources:")
     print("finalProcedure is:")
