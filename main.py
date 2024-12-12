@@ -5,8 +5,9 @@ from pyswip import Prolog
 PROLOG = Prolog()
 DEBUG = False
 VALID_MACHINES = ["stone", "plank", "stick", "redstonetorch", "comparator", "witchfarm"]
-QUIT_WORDS = ["", "4", "exit", "close", "quit"]
+QUIT_WORDS = ["", "3", "exit", "close", "quit"]
 MAX_STRING_LENGTH = 99
+EFFORT_CONVERSION = {"verylow" : 1, "low" : 3, "medium" : 5, "high" : 7, "veryhigh" : 9}
 
 
 ##########
@@ -89,6 +90,8 @@ def prologInitialize():
     PROLOG.assertz("raw(cobblestone)")
     PROLOG.assertz("raw(stick)")
     PROLOG.assertz("raw(string)")
+    PROLOG.assertz("raw(emerald)")
+    PROLOG.assertz("raw(villager)")
 
     PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
 
@@ -104,7 +107,7 @@ def prologInitialize():
     '''
     PROLOG.assertz("farmCutoff(redstone, 1)")
     PROLOG.assertz("farmCutoff(log, 1)")
-    PROLOG.assertz("farmCutoff(quartz, 1)")
+    PROLOG.assertz("farmCutoff(quartz, 100)")
     PROLOG.assertz("farmCutoff(cobblestone, 1)")
     PROLOG.assertz("farmCutoff(stick, 1)")
     PROLOG.assertz("farmCutoff(string, 1)")
@@ -128,15 +131,20 @@ def prologInitialize():
     # Materials to create
     PROLOG.assertz("composedOf(witchfarm, composter, 10)")
     PROLOG.assertz("composedOf(witchfarm, string, 50)")
+    PROLOG.assertz("composedOf(villagerfarm, villager, 2)")
 
     # Drops from farm
     PROLOG.assertz("produces(witchfarm, redstone, 250)")
     PROLOG.assertz("produces(witchfarm, stick, 500)")
-    PROLOG.assertz("produces(villagers, redstone, 100)")
+    PROLOG.assertz("produces(villagerfarm, redstone, 100)")
+    PROLOG.assertz("produces(raidfarm, redstone, 1000)")
+    PROLOG.assertz("produces(raidfarm, stick, 2000)")
+    PROLOG.assertz("produces(raidfarm, emerald, 5000)")
 
-    # witch farm effort
-    PROLOG.assertz("effort(witchfarm, low)")
-    #PROLOG.assertz("")
+    # Effort to build farm
+    PROLOG.assertz("effort(witchfarm, verylow)")
+    PROLOG.assertz("effort(villagerfarm, medium)")
+    PROLOG.assertz("effort(raidfarm, veryhigh)")
     #PROLOG.assertz("")
     #PROLOG.assertz("")
 
@@ -198,9 +206,10 @@ def getUserQuery():
         print("function getUserQuery() begins")
 
     # Variables to hold results
-    resourcesInProgress = {}    # Working list of all resources our algorithm must account for
+    resourcesNeeded = {}        # Working list of all resources our algorithm must account for
     resourcesToGather = {}      # Resources the player should gather manually
     resourcesFinal = {}         # Dictionary to tabulate all resources needed
+    resourcesFound = []
     procedureFinal = []         # List to document steps for player to follow
     '''
     #farmCutoff = {}             # Amount of resources where a farm will be recommended (instead of gathering manually)
@@ -237,34 +246,42 @@ def getUserQuery():
             print("Input needs to be a valid machine, please try again, or type QUIT to return to main menu ")
 
     # Query KB
-    prologCompositionQuery(resourcesInProgress, userQueryInput)
+    prologCompositionQuery(resourcesNeeded, userQueryInput)
+    resourcesFinal = resourcesNeeded
 
-    resourcesFinal = resourcesInProgress
+    # Add building the machine to the procedure
+    procedureFinal.append(f"Build {userQueryInput}")
 
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
+    # Build Procedure               # need a resourcesNeeded variable to track in general, a list which gets reduced to zero over time, loop until it's empty
+    while True:
+        addedResources = {}
 
-    # Build Procedure               # need a resourcesInProgress variable to track in general, a list which gets reduced to zero over time, loop until it's empty
-    while len(resourcesInProgress) > 0:
-        for resource in resourcesInProgress:
-            print(f"\nCurrently searching resource: ({resource})")
-            ### Check min cutoffs
-            amt = resourcesInProgress[resource]
+        for resource in resourcesNeeded:
+            print(f"\nCurrently searching resource: {resource}")
+
+            if resource in resourcesFound:
+                print(f"Skipping {resource}, farm already recommended")
+                continue
+
+            # Check if the needed amount exceeds the farm cutoff
+            amt = resourcesNeeded[resource]
             
             # Get cutoff
-            cutoffQuery = f"farmCutoff({resource}, CutoffAmt)"
-
+            cutOffQuery = f"farmCutoff({resource}, CutoffAmt)"
+            cutOff = False
             # Query prolog for the cutoff amount
-            for result in PROLOG.query(cutoffQuery):
+            for result in PROLOG.query(cutOffQuery):
 
                 # If the amount is small, have user gather it manually
                 if amt < result["CutoffAmt"]:
                     resourcesToGather.update({resource: amt})
-                    print(f"Added ({resource}) to resourcesToGather")
+                    print(f"No farm needed for {resource}, adding to manual gathering list")
+                    cutOff = True
+            if cutOff:
+                continue
+
+            else:
+                print(f"Determined farm should be built for {resource}")
 
             # Find all farms that produce this resource
             farmsList = {}
@@ -277,81 +294,105 @@ def getUserQuery():
 
             # Handle exceptions where no farms can be found
             if len(farm) == 0:
-                print(f"No farms listed for the resource: ({resource})")
+                print(f"No farms listed for {resource}, adding to manual gathering list")
+                resourcesToGather.update({resource : amt})
                 continue
 
             else:
                 print(f"Found the following farms: {farmsList}")
                 #print(farmsList)
 
-
-            ### Evaluate which farm is best
-            # Write down everything you EXPECT to put in here
-            # Go farm by farm - do them one at a time
+            # Evaluate which farm is best
             suitabilityScore = {}
-            for thisFarm in farmsList:                  # Currently farmsList is a dictionary where the keys are the name of the farm, the value is the rate it produces our given resource
-                print(f"Analyzing farm: {thisFarm}")
-
+            for thisFarm in farmsList:
                 # Score variable to track analysis
                 score = 0     
 
-                # Get other resources produced by the farm
+                # Get all resources produced by the farm
                 allProduced = {}
                 allProducedQuery = f"produces({thisFarm}, Resource, Amt)"
                 for resultORQ in PROLOG.query(allProducedQuery):
                     allProduced.update({resultORQ["Resource"]:resultORQ["Amt"]})
 
-                # Loop through otherResources
+                # Go through each resource produced by the farm and add to the score
+                # with less points given to non-essential (byproducts) of the farm
                 for x in allProduced:
-                    if x in resourcesInProgress:
+
+                    if x in resourcesNeeded:
                         score += allProduced[x]     # Add to the score if resource is necessary
                     else:
                         score += allProduced[x] / 10   # Non-essential products of the farm still count, but less valuable
 
-                # Need to add/multiply a bunch of things together
-                # Start with the 
+                # Determine effort required to build farm
+                effortQuery = f"effort({thisFarm}, X)"
+                effortNum = 0
+                for resultEff in PROLOG.query(effortQuery):
+                    # Convert effort string (low, medium, high...) to numerical value
+                    effortNum = EFFORT_CONVERSION[resultEff["X"]]
+                
+                # Adjust score based on effort
+                score /= effortNum
 
                 # Set suitability score for this farm
                 suitabilityScore.update({thisFarm : score})
-                print(f"Suitability score for {thisFarm} is {suitabilityScore[thisFarm]}")
+                #print(f"Suitability score for {thisFarm} is {suitabilityScore[thisFarm]}")
 
-            # Compare and rank suitability scores                
+            # Get farm with max score
+            bestFarm = ""
+            bestScore = 0                
+            for thisFarm in suitabilityScore:
+                if suitabilityScore[thisFarm] > bestScore:
+                    bestFarm = thisFarm
+                    bestScore = suitabilityScore[thisFarm]
+            
+            print(f"Determined best farm for {resource} to be {bestFarm} with a score of {bestScore}")
 
-    ######## LAST WORKING HERE ##########################
-    ######## LAST WORKING HERE ##########################
-    ######## LAST WORKING HERE ##########################
+            # Add farm to the procedure
+            procedureFinal.insert(0, f"Build {bestFarm}")
 
-            ### Add building the farm to Procedure
+            # Add produce of farm to resourcesFound
+            bestFarmProduces = []
+            bestFarmProducesQuery = f"produces({bestFarm}, Resource, Amt)"
+            for result in PROLOG.query(bestFarmProducesQuery):
+                if result["Resource"] not in resourcesFound:
+                    resourcesFound.append(result["Resource"])
+            
+            # Get resources needed to build the farm
+            bestFarmRawCompositionQuery = f"rawComposition({bestFarm}, Resource, Amt)"
+            for result in PROLOG.query(bestFarmRawCompositionQuery):
+                if result["Resource"] not in resourcesFound:
+                    if result["Resource"] not in resourcesToGather:
+                        if result["Resource"] not in addedResources:
+                            addedResources.update({result["Resource"] : result["Amt"]})
 
-            ### Get resources needed to build the farm
 
-            ### Add those resources to resourcesInProgress (purge any that are in a list of farmed resources)
+        if (len(addedResources) == 0):
+            break
+        else:
+            resourcesNeeded = addedResources
+            for x in addedResources:
+                resourcesFinal.update({x : addedResources[x]})
+            #print(f"resourcesNeeded is now: {resourcesNeeded}, searching again")
+            print(f"\nDetermined additional resources needed to consturct farms, searching again")
+        #break
 
-        # Remove manually gathered resources from resourcesInProgress
-        for x in resourcesToGather:
-            del resourcesInProgress[x]
-            print("resourcesInProgress is now:")
-            print(resourcesInProgress)
-
-        # Remove this break statement once you can reliably clear the resourcesInProgress dictionary
-        break
-
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
-            ##### WIP #####
+    procedureFinal.insert(len(procedureFinal)-1, "Manually gather the resources above")
 
     # Display Results
-    print("\nThese are all the resources required:")
+    print("\n________________")
+    print("SEARCH COMPLETE")
+    print("\nTotal resources required:")
     print(resourcesFinal)
+    print("__")
     print("\nUser should gather the following resources manually:")
     print(resourcesToGather)
-    print("Suggested procedure to gather the remaining resources:")
-    print("finalProcedure is:")
-    print(procedureFinal)
+    print("\nProcedure to follow:")
+    count = 1
+    for procedure in procedureFinal:
+        print(f"{count}. {procedure}")
+        count += 1
+    #print(procedureFinal)
+
 
 ##############################
 # MAIN MENU
@@ -365,8 +406,7 @@ def displayMainMenu():
     print("\nMain Menu\n")
     print("1. Search Knowledge Base")
     print("2. List Valid Machines")
-    print("3. WIP")
-    print("4. Exit\n")
+    print("3. Exit\n")
 
 
 # Main program loop
@@ -380,21 +420,18 @@ def main():
     # Main Menu
     userSelection = -1
     prompt = "Your selection: "
-    while userSelection != 4:
+    while userSelection != 3:
         displayMainMenu()
-        userSelection = intInput(prompt, 1, 4)
+        userSelection = intInput(prompt, 1, 3)
 
         if userSelection == 1:
             getUserQuery()
         
-        if userSelection == 2:
+        elif userSelection == 2:
             print("\nValid Machines:")
             print(VALID_MACHINES)
         
         elif userSelection == 3:
-            print("\n\nThis section is a work in progress - more to come!\n\n")
-        
-        elif userSelection == 4:
             break
 
     print("\n\nThank you for using this program!\n\n")
