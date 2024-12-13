@@ -4,7 +4,7 @@ from pyswip import Prolog
 # Global Variables
 PROLOG = Prolog()
 DEBUG = False
-VALID_MACHINES = ["comparator", "observer", "repeater", "witchfarm", "itemsorter", "piston", "stickypiston", "raidfarm", "villagerfarm"]
+VALID_MACHINES = ["comparator", "observer", "repeater", "witchfarm", "itemsorter", "piston", "stickypiston", "raidfarm", "villagerfarm", "ironfarm", "goldfarm", "turtlefarm", "piglinbarterfarm"]
 QUIT_WORDS = ["", "3", "exit", "close", "quit"]
 MAX_STRING_LENGTH = 99
 EFFORT_CONVERSION = {"verylow" : 1, "low" : 3, "medium" : 5, "high" : 7, "veryhigh" : 9}
@@ -73,10 +73,6 @@ def stringInput(prompt, minLength, maxLength):
 # PROLOG
 ##########
 
-
-##############################
-# WIP
-##############################
 def prologInitialize():
     if DEBUG:
         print("function prologInitialize() begins")
@@ -114,20 +110,25 @@ def prologInitialize():
     PROLOG.assertz("raw(gunpowder)")
     PROLOG.assertz("raw(spidereye)")
     PROLOG.assertz("raw(bottle)")
-    #PROLOG.assertz("raw()")
-    #PROLOG.assertz("raw()")
+    PROLOG.assertz("raw(poppy)")
+    PROLOG.assertz("raw(nametag)")
+    PROLOG.assertz("raw(seagrass)")
+    PROLOG.assertz("raw(turtle)")
+    #PROLOG.assertz("")
+    #PROLOG.assertz("")
+    #PROLOG.assertz("")
 
 
     PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
 
     
     # Farm cutoffs for raw resources
-    PROLOG.assertz("farmCutoff(redstone, 64)")
+    PROLOG.assertz("farmCutoff(redstone, 200)")
     PROLOG.assertz("farmCutoff(log, 400)")
     PROLOG.assertz("farmCutoff(quartz, 200)")
     PROLOG.assertz("farmCutoff(cobblestone, 2000)")
     PROLOG.assertz("farmCutoff(stick, 200)")
-    PROLOG.assertz("farmCutoff(string, 64)")
+    PROLOG.assertz("farmCutoff(string, 128)")
     PROLOG.assertz("farmCutoff(emerald, 200)")
     PROLOG.assertz("farmCutoff(villager, 2)")
     PROLOG.assertz("farmCutoff(slime, 10)")
@@ -152,6 +153,10 @@ def prologInitialize():
     PROLOG.assertz("farmCutoff(gunpowder, 64)")
     PROLOG.assertz("farmCutoff(spidereye, 32)")
     PROLOG.assertz("farmCutoff(bottle, 1000)")
+    PROLOG.assertz("farmCutoff(poppy, 64)")
+    PROLOG.assertz("farmCutoff(nametag, 1)")
+    PROLOG.assertz("farmCutoff(seagrass, 500)")
+    PROLOG.assertz("farmCutoff(turtle, 3)")
     #PROLOG.assertz("farmCutoff(, )")
     #PROLOG.assertz("farmCutoff(, )")
 
@@ -222,9 +227,9 @@ def prologInitialize():
     PROLOG.assertz("composedOf(tripwirehook, plank, 1)")
     PROLOG.assertz("composedOf(tripwirehook, stick, 1)")
     PROLOG.assertz("composedOf(minecart, iron, 5)")
-    #PROLOG.assertz("composedOf(, , )")
-    #PROLOG.assertz("composedOf(, , )")
-    #PROLOG.assertz("composedOf(, , )")
+    PROLOG.assertz("composedOf(bed, plank, 3)")
+    PROLOG.assertz("composedOf(bed, wool, 3)")
+    PROLOG.assertz("composedOf(wool, string, 4)")
     #PROLOG.assertz("composedOf(, , )")
     #PROLOG.assertz("composedOf(, , )")
     #PROLOG.assertz("composedOf(, , )")
@@ -255,8 +260,9 @@ def prologInitialize():
     PROLOG.assertz("produces(villagerfarm, redstone, 50)")
     PROLOG.assertz("produces(villagerfarm, emerald, 100)")
     PROLOG.assertz("produces(villagerfarm, villager, 100)")
+    PROLOG.assertz("produces(villagerfarm, nametag, 2)")
     PROLOG.assertz("composedOf(villagerfarm, villager, 2)")
-    PROLOG.assertz("effort(villagerfarm, medium)")
+    PROLOG.assertz("effort(villagerfarm, high)")
 
     PROLOG.assertz("produces(raidfarm, stick, 1000)")
     PROLOG.assertz("produces(raidfarm, redstone, 500)")
@@ -280,9 +286,52 @@ def prologInitialize():
     PROLOG.assertz("composedOf(raidfarm, itemsorter, 14)")
     PROLOG.assertz("effort(raidfarm, veryhigh)")
 
+    PROLOG.assertz("produces(ironfarm, iron, 500)")
+    PROLOG.assertz("produces(ironfarm, poppy, 250)")
+    PROLOG.assertz("composedOf(ironfarm, villager, 3)")
+    PROLOG.assertz("composedOf(ironfarm, bed, 3)")
+    PROLOG.assertz("composedOf(ironfarm, villager, 3)")
+    PROLOG.assertz("composedOf(ironfarm, itemsorter, 2)")
+    PROLOG.assertz("composedOf(ironfarm, zombie, 1)")
+    PROLOG.assertz("composedOf(ironfarm, nametag, 1)")
+    PROLOG.assertz("effort(ironfarm, verylow)")
+
+    PROLOG.assertz("produces(turtlefarm, turtleegg, 10)")
+    PROLOG.assertz("composedOf(turtlefarm, sand, 64)")
+    PROLOG.assertz("composedOf(turtlefarm, seagrass, 64)")
+    PROLOG.assertz("composedOf(turtlefarm, turtle, 2)")
+    PROLOG.assertz("effort(turtlefarm, veryhigh)")
+
+    PROLOG.assertz("produces(goldfarm, goldnugget, 10000)")
+    PROLOG.assertz("composedOf(goldfarm, magmablock, 4000)")
+    PROLOG.assertz("composedOf(goldfarm, turtleegg, 30)")
+    PROLOG.assertz("composedOf(goldfarm, itemsorter, 4)")
+    PROLOG.assertz("composedOf(goldfarm, piston, 8)")
+    PROLOG.assertz("composedOf(goldfarm, observer, 8)")
+    PROLOG.assertz("composedOf(goldfarm, packedice, 20)")
+    PROLOG.assertz("effort(goldfarm, medium)")
+
+    PROLOG.assertz("produces(piglinbarterfarm, obsidian, 200)")
+    PROLOG.assertz("produces(piglinbarterfarm, string, 200)")
+    PROLOG.assertz("produces(piglinbarterfarm, quartz, 300)")
+    PROLOG.assertz("produces(piglinbarterfarm, iron, 50)")
+    PROLOG.assertz("produces(piglinbarterfarm, soulsand, 100)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, piglin, 1)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, goldnugget, 10000)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, itemsorter, 14)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, dropper, 1)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, observer, 2)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, lever, 1)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, stickypiston, 1)")
+    PROLOG.assertz("composedOf(piglinbarterfarm, packedice, 20)")
+    PROLOG.assertz("effort(piglinbarterfarm, high)")
+
+    #PROLOG.assertz("produces(, , )")
+    #PROLOG.assertz("composedOf(, , )")
+    #PROLOG.assertz("effort(, )")
 
     #PROLOG.assertz("")
-    #PROLOG.assertz("")
+
 
 
 
@@ -352,10 +401,11 @@ def getUserQuery():
 
     # Query KB
     prologCompositionQuery(resourcesNeeded, userQueryInput)
+    print(f"Initial search complete, resources needed: {resourcesNeeded}")
     resourcesFinal = resourcesNeeded
 
     # Add building the machine to the procedure
-    procedureFinal.append(f"Build {userQueryInput}")
+    procedureFinal.append(userQueryInput)
 
     # Build Procedure
     while True:
@@ -374,11 +424,12 @@ def getUserQuery():
             # Get cutoff
             cutOffQuery = f"farmCutoff({resource}, CutoffAmt)"
             cutOff = False
+            cutoffAmt = 0
             # Query prolog for the cutoff amount
             for result in PROLOG.query(cutOffQuery):
-
+                cutoffAmt = result["CutoffAmt"]
                 # If the amount is small, have user gather it manually
-                if amt < result["CutoffAmt"]:
+                if amt <= result["CutoffAmt"]:
                     resourcesToGather.update({resource: amt})
                     print(f"No farm needed for {resource}, adding to manual gathering list")
                     cutOff = True
@@ -386,13 +437,15 @@ def getUserQuery():
                 continue
 
             else:
-                print(f"Determined farm should be built for {resource}")
+                print(f"Determined farm should be built for {resource}, {amt} exceeds the cutoff of {cutoffAmt}")
 
             # Find all farms that produce this resource
             farmsList = {}
             farmQuery = f"produces(Farmname, {resource}, Amt)"
             farm = {}       # Variable to receive the result of the prolog query
             for farm in PROLOG.query(farmQuery):
+                if farm["Farmname"] in procedureFinal:      # Skip farms that are already accounted for
+                    continue
                 farmsList.update({farm["Farmname"]:farm["Amt"]})
 
             # Handle exceptions where no farms can be found
@@ -450,7 +503,7 @@ def getUserQuery():
             print(f"Determined best farm for {resource} to be {bestFarm} with a score of {bestScore}")
 
             # Add farm to the procedure
-            procedureFinal.insert(0, f"Build {bestFarm}")
+            procedureFinal.insert(0, bestFarm)
 
             # Add produce of farm to resourcesFound
             bestFarmProduces = []
@@ -474,10 +527,7 @@ def getUserQuery():
             resourcesNeeded = addedResources
             for x in addedResources:
                 resourcesFinal.update({x : addedResources[x]})
-            print(f"\nDetermined additional resources needed to consturct farms, searching again")
-        #break
-
-    procedureFinal.insert(len(procedureFinal)-1, "Manually gather the resources above")
+            print(f"\nDetermined additional resources needed to construct farms, searching again")
 
     # Display Results
     print("\n________________")
@@ -489,8 +539,12 @@ def getUserQuery():
     print(resourcesToGather)
     print("\nProcedure to follow:")
     count = 1
+    if len(resourcesToGather) != 0:
+        print("1. Manually gather the resources above")
+        count += 1
+
     for procedure in procedureFinal:
-        print(f"{count}. {procedure}")
+        print(f"{count}. Build {procedure}")
         count += 1
     #print(procedureFinal)
 
