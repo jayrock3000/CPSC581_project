@@ -68,9 +68,8 @@ def stringInput(prompt, minLength, maxLength):
         break
     return userInput
 
-
 ##########
-# PROLOG
+# PROLOG KNOWLEDGE BASE
 ##########
 
 def prologInitialize():
@@ -116,12 +115,10 @@ def prologInitialize():
     PROLOG.assertz("raw(turtle)")
     PROLOG.assertz("raw(pumpkin)")
     PROLOG.assertz("raw(bighole)")
-    #PROLOG.assertz("")
 
-
+    # Definition of a non-raw item
     PROLOG.assertz("notRaw(Item) :- not(raw(Item))")
 
-    
     # Farm cutoffs for raw resources
     PROLOG.assertz("farmCutoff(redstone, 200)")
     PROLOG.assertz("farmCutoff(log, 400)")
@@ -159,13 +156,8 @@ def prologInitialize():
     PROLOG.assertz("farmCutoff(turtle, 3)")
     PROLOG.assertz("farmCutoff(pumpkin, 64)")
     PROLOG.assertz("farmCutoff(bighole, 0)")
-    #PROLOG.assertz("farmCutoff(, )")
-    #PROLOG.assertz("farmCutoff(, )")
-    #PROLOG.assertz("farmCutoff(, )")
-    #PROLOG.assertz("farmCutoff(, )")
 
-
-    # item composition
+    # Item composition - e.g. a redstone torch is crafted by combining 1 redstone and 1 stick
     PROLOG.assertz("composedOf(stone, cobblestone, 1)")
     PROLOG.assertz("composedOf(redstonetorch, redstone, 1)")
     PROLOG.assertz("composedOf(redstonetorch, stick, 1)")
@@ -252,8 +244,6 @@ def prologInitialize():
     PROLOG.assertz("composedOf(detectorrail, stonepressureplate, 2)")
     PROLOG.assertz("composedOf(stonepressureplate, stone, 2)")
     PROLOG.assertz("composedOf(completestoragesystem, itemsorter, 1000)")
-    #PROLOG.assertz("composedOf(, , )")
-
 
     # Get the raw materials composing a component
     PROLOG.assertz("rawComposition(Item, Component, Qty) :- composedOf(Item, Component, Qty), raw(Component)")  # Returns raw components of an item
@@ -373,20 +363,6 @@ def prologInitialize():
     PROLOG.assertz("composedOf(treefarm, dropper, 12)")
     PROLOG.assertz("composedOf(treefarm, bonemeal, 10000)")
     PROLOG.assertz("effort(treefarm, high)")
-
-    #PROLOG.assertz("produces(, , )")
-    #PROLOG.assertz("composedOf(, , )")
-    #PROLOG.assertz("effort(, )")
-
-    #PROLOG.assertz("produces(, , )")
-    #PROLOG.assertz("composedOf(, , )")
-    #PROLOG.assertz("effort(, )")
-
-    #PROLOG.assertz("")
-
-
-
-
     
 def prologCompositionQuery(resources, userQuery):
     if DEBUG:
@@ -406,13 +382,6 @@ def prologCompositionQuery(resources, userQuery):
         # If the key is already initialized
         else:
             resources[result["X"]] = result["Y"] + resources[result["X"]]
-
-    # Backup of different methods to query prolog
-    #result = list(PROLOG.query(query))
-    #print(result)
-    #print("result type is:")
-    #print(type(result))
-
 
 ##############################
 # USER QUERY
@@ -598,8 +567,6 @@ def getUserQuery():
     for procedure in procedureFinal:
         print(f"{count}. Build {procedure}")
         count += 1
-    #print(procedureFinal)
-
 
 ##############################
 # MAIN MENU
@@ -642,7 +609,6 @@ def main():
             break
 
     print("\n\nThank you for using this program!\n\n")
-
 
 if __name__ == "__main__":
     main()
