@@ -4,7 +4,7 @@ from pyswip import Prolog
 # Global Variables
 PROLOG = Prolog()
 DEBUG = False
-VALID_MACHINES = ["comparator", "observer", "repeater", "witchfarm", "itemsorter", "piston", "stickypiston", "raidfarm", "villagerfarm", "ironfarm", "goldfarm", "turtlefarm", "piglinbarterfarm"]
+VALID_MACHINES = ["comparator", "observer", "repeater", "witchfarm", "itemsorter", "piston", "stickypiston", "raidfarm", "villagerfarm", "ironfarm", "goldfarm", "turtlefarm", "piglinbarterfarm", "slimefarm", "treefarm", "completestoragesystem"]
 QUIT_WORDS = ["", "3", "exit", "close", "quit"]
 MAX_STRING_LENGTH = 99
 EFFORT_CONVERSION = {"verylow" : 1, "low" : 3, "medium" : 5, "high" : 7, "veryhigh" : 9}
@@ -114,8 +114,8 @@ def prologInitialize():
     PROLOG.assertz("raw(nametag)")
     PROLOG.assertz("raw(seagrass)")
     PROLOG.assertz("raw(turtle)")
-    #PROLOG.assertz("")
-    #PROLOG.assertz("")
+    PROLOG.assertz("raw(pumpkin)")
+    PROLOG.assertz("raw(bighole)")
     #PROLOG.assertz("")
 
 
@@ -157,6 +157,10 @@ def prologInitialize():
     PROLOG.assertz("farmCutoff(nametag, 1)")
     PROLOG.assertz("farmCutoff(seagrass, 500)")
     PROLOG.assertz("farmCutoff(turtle, 3)")
+    PROLOG.assertz("farmCutoff(pumpkin, 64)")
+    PROLOG.assertz("farmCutoff(bighole, 0)")
+    #PROLOG.assertz("farmCutoff(, )")
+    #PROLOG.assertz("farmCutoff(, )")
     #PROLOG.assertz("farmCutoff(, )")
     #PROLOG.assertz("farmCutoff(, )")
 
@@ -230,8 +234,24 @@ def prologInitialize():
     PROLOG.assertz("composedOf(bed, plank, 3)")
     PROLOG.assertz("composedOf(bed, wool, 3)")
     PROLOG.assertz("composedOf(wool, string, 4)")
-    #PROLOG.assertz("composedOf(, , )")
-    #PROLOG.assertz("composedOf(, , )")
+    PROLOG.assertz("composedOf(rail, iron, 0.4)")
+    PROLOG.assertz("composedOf(rail, stick, 0.1)")
+    PROLOG.assertz("composedOf(poweredrail, gold, 1)")
+    PROLOG.assertz("composedOf(poweredrail, redstone, 0.2)")
+    PROLOG.assertz("composedOf(poweredrail, stick, 0.2)")
+    PROLOG.assertz("composedOf(ironblock, iron, 9)")
+    PROLOG.assertz("composedOf(irongolem, ironblock, 4)")
+    PROLOG.assertz("composedOf(irongolem, pumpkin, 1)")
+    PROLOG.assertz("composedOf(tntduper, minecart, 1)")
+    PROLOG.assertz("composedOf(tntduper, tnt, 1)")
+    PROLOG.assertz("composedOf(tntduper, deadcoral, 1)")
+    PROLOG.assertz("composedOf(tntduper, slimeblock, 5)")
+    PROLOG.assertz("composedOf(tntduper, detectorrail, 1)")
+    PROLOG.assertz("composedOf(detectorrail, iron, 1)")
+    PROLOG.assertz("composedOf(detectorrail, redstone, 0.2)")
+    PROLOG.assertz("composedOf(detectorrail, stonepressureplate, 2)")
+    PROLOG.assertz("composedOf(stonepressureplate, stone, 2)")
+    PROLOG.assertz("composedOf(completestoragesystem, itemsorter, 1000)")
     #PROLOG.assertz("composedOf(, , )")
 
 
@@ -261,6 +281,7 @@ def prologInitialize():
     PROLOG.assertz("produces(villagerfarm, emerald, 100)")
     PROLOG.assertz("produces(villagerfarm, villager, 100)")
     PROLOG.assertz("produces(villagerfarm, nametag, 2)")
+    PROLOG.assertz("produces(villagerfarm, diamondpickaxe, 1)")
     PROLOG.assertz("composedOf(villagerfarm, villager, 2)")
     PROLOG.assertz("effort(villagerfarm, high)")
 
@@ -309,7 +330,7 @@ def prologInitialize():
     PROLOG.assertz("composedOf(goldfarm, piston, 8)")
     PROLOG.assertz("composedOf(goldfarm, observer, 8)")
     PROLOG.assertz("composedOf(goldfarm, packedice, 20)")
-    PROLOG.assertz("effort(goldfarm, medium)")
+    PROLOG.assertz("effort(goldfarm, high)")
 
     PROLOG.assertz("produces(piglinbarterfarm, obsidian, 200)")
     PROLOG.assertz("produces(piglinbarterfarm, string, 200)")
@@ -324,7 +345,38 @@ def prologInitialize():
     PROLOG.assertz("composedOf(piglinbarterfarm, lever, 1)")
     PROLOG.assertz("composedOf(piglinbarterfarm, stickypiston, 1)")
     PROLOG.assertz("composedOf(piglinbarterfarm, packedice, 20)")
-    PROLOG.assertz("effort(piglinbarterfarm, high)")
+    PROLOG.assertz("effort(piglinbarterfarm, veryhigh)")
+
+    PROLOG.assertz("produces(slimefarm, slime, 1000)")
+    PROLOG.assertz("composedOf(slimefarm, rail, 100)")
+    PROLOG.assertz("composedOf(slimefarm, hopper, 12)")
+    PROLOG.assertz("composedOf(slimefarm, minecart, 3)")
+    PROLOG.assertz("composedOf(slimefarm, irongolem, 4)")
+    PROLOG.assertz("composedOf(slimefarm, bighole, 1)")
+    PROLOG.assertz("effort(slimefarm, medium)")
+
+    PROLOG.assertz("produces(gianthole, bighole, 1)")
+    PROLOG.assertz("composedOf(gianthole, diamondpickaxe, 1)")
+    PROLOG.assertz("effort(gianthole, medium)")
+
+    PROLOG.assertz("produces(treefarm, log, 10000)")
+    PROLOG.assertz("composedOf(treefarm, observer, 30)")
+    PROLOG.assertz("composedOf(treefarm, stickypiston, 30)")
+    PROLOG.assertz("composedOf(treefarm, piston, 30)")
+    PROLOG.assertz("composedOf(treefarm, slimeblock, 30)")
+    PROLOG.assertz("composedOf(treefarm, honeyblock, 30)")
+    PROLOG.assertz("composedOf(treefarm, tntduper, 1)")
+    PROLOG.assertz("composedOf(treefarm, repeater, 10)")
+    PROLOG.assertz("composedOf(treefarm, dispenser, 4)")
+    PROLOG.assertz("composedOf(treefarm, hopper, 10)")
+    PROLOG.assertz("composedOf(treefarm, chest, 5)")
+    PROLOG.assertz("composedOf(treefarm, dropper, 12)")
+    PROLOG.assertz("composedOf(treefarm, bonemeal, 10000)")
+    PROLOG.assertz("effort(treefarm, high)")
+
+    #PROLOG.assertz("produces(, , )")
+    #PROLOG.assertz("composedOf(, , )")
+    #PROLOG.assertz("effort(, )")
 
     #PROLOG.assertz("produces(, , )")
     #PROLOG.assertz("composedOf(, , )")
